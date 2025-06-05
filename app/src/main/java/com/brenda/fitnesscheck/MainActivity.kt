@@ -48,10 +48,10 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         Column(modifier = Modifier.fillMaxHeight()
             .width(100.dp)
             .background(Color.Yellow)) {}
-        Column(modifier = Modifier.fillMaxHeight().width(100.dp).background(Color.Gray)) {
+        Column(modifier = Modifier.fillMaxHeight().width(100.dp).background(Color.Green)) {
             Text(text = "Column 2")
         }
-        Column(modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color.Green),
+        Column(modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color.Blue),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = "Column 3")
