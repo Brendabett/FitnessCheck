@@ -1,8 +1,9 @@
-// Enhanced Interactive Jetpack Compose Fitness Check App with Interactive Friends Screen
+// Enhanced Interactive Jetpack Compose Fitness Check App with Profile Settings and Calendar
 package com.brenda.fitnesscheck
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,9 +33,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
@@ -46,7 +47,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -76,6 +76,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,6 +86,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import java.time.LocalDate
 import java.time.LocalDate.now
+import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -103,43 +105,6 @@ data class DailyGoals(
     val waterAchieved: Boolean = false,
     val sleepAchieved: Boolean = false,
     val moodLogged: Boolean = false
-)
-
-// Data classes for friends functionality
-data class Friend(
-    val id: String,
-    val name: String,
-    val profilePictureIndex: Int,
-    val currentSteps: Int = 0,
-    val stepGoal: Int = 10000,
-    val isOnline: Boolean = false,
-    val lastActive: String = "",
-    val streak: Int = 0
-)
-
-data class Challenge(
-    val id: String,
-    val title: String,
-    val description: String,
-    val type: ChallengeType,
-    val duration: String,
-    val participants: List<String>,
-    val isActive: Boolean,
-    val prize: String = "",
-    val progress: Float = 0f,
-    val maxProgress: Float = 100f
-)
-
-enum class ChallengeType {
-    STEPS, WATER, SLEEP, MEDITATION, MIXED
-}
-
-data class Leaderboard(
-    val friendId: String,
-    val name: String,
-    val score: Int,
-    val profilePictureIndex: Int,
-    val rank: Int
 )
 
 class MainActivity : ComponentActivity() {
@@ -168,7 +133,11 @@ fun FitnessCheckTheme(content: @Composable () -> Unit) {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+
+    // Shared user profile state
     var userProfile by remember { mutableStateOf(UserProfile()) }
+
+    // Generate sample calendar data
     val calendarData = remember { generateSampleCalendarData() }
 
     NavHost(navController, startDestination = "wellness_home") {
@@ -192,10 +161,11 @@ fun AppNavigation() {
     }
 }
 
-// Helper functions
+// Helper function to generate sample calendar data
 fun generateSampleCalendarData(): List<DailyGoals> {
     val today = now()
     val data = mutableListOf<DailyGoals>()
+
     for (i in -30..0) {
         val date = today.plusDays(i.toLong())
         data.add(
@@ -208,73 +178,20 @@ fun generateSampleCalendarData(): List<DailyGoals> {
             )
         )
     }
+
     return data
 }
 
-fun generateSampleFriends(): List<Friend> {
-    return listOf(
-        Friend("1", "Sarah Wilson", 1, 8750, 10000, true, "Online", 15),
-        Friend("2", "Mike Johnson", 2, 12340, 10000, false, "2h ago", 8),
-        Friend("3", "Emma Davis", 3, 6500, 8000, true, "Online", 22),
-        Friend("4", "Alex Chen", 4, 9800, 12000, false, "1d ago", 5),
-        Friend("5", "Lisa Taylor", 0, 11200, 10000, true, "Online", 12)
-    )
-}
-
-fun generateSampleChallenges(): List<Challenge> {
-    return listOf(
-        Challenge(
-            "1", "Weekend Warriors", "Walk 20,000 steps this weekend",
-            ChallengeType.STEPS, "2 days", listOf("1", "2", "3"), true,
-            "🏆 Winner's Badge", 65f, 100f
-        ),
-        Challenge(
-            "2", "Hydration Station", "Drink 2L water daily for a week",
-            ChallengeType.WATER, "7 days", listOf("1", "4", "5"), true,
-            "💧 Hydration Hero", 40f, 100f
-        ),
-        Challenge(
-            "3", "Sleep Masters", "Get 8+ hours sleep for 5 nights",
-            ChallengeType.SLEEP, "5 days", listOf("2", "3"), false,
-            "😴 Sleep Champion", 0f, 100f
-        ),
-        Challenge(
-            "4", "Monthly Mile", "Walk 100 miles this month",
-            ChallengeType.STEPS, "30 days", listOf("1", "2", "3", "4", "5"), true,
-            "🎖️ Distance Master", 78f, 100f
-        )
-    )
-}
-
-fun generateLeaderboard(friends: List<Friend>): List<Leaderboard> {
-    return friends.mapIndexed { index, friend ->
-        Leaderboard(
-            friendId = friend.id,
-            name = friend.name,
-            score = friend.currentSteps + (friend.streak * 100),
-            profilePictureIndex = friend.profilePictureIndex,
-            rank = index + 1
-        )
-    }.sortedByDescending { it.score }
-        .mapIndexed { index, leaderboard -> leaderboard.copy(rank = index + 1) }
-}
-
+// Helper function for profile picture colors
 fun getProfilePictureColor(index: Int): Color {
     val colors = listOf(
-        Color(0xFF1976D2), Color(0xFF4CAF50), Color(0xFFFF9800),
-        Color(0xFF9C27B0), Color(0xFFF44336)
+        Color(0xFF1976D2), // Blue
+        Color(0xFF4CAF50), // Green
+        Color(0xFFFF9800), // Orange
+        Color(0xFF9C27B0), // Purple
+        Color(0xFFF44336)  // Red
     )
     return colors[index % colors.size]
-}
-
-fun getChallengeTypeEmoji(type: ChallengeType): String {
-    return when (type) {
-        ChallengeType.STEPS -> "🚶"
-        ChallengeType.WATER -> "💧"
-        ChallengeType.SLEEP -> "😴"
-        ChallengeType.MEDITATION -> "🧘"
-        ChallengeType.MIXED -> "🎯"
-    }
 }
 
 @Composable
@@ -332,42 +249,6 @@ fun WellnessTopBar(navController: NavController) {
             }
         }
     )
-}
-
-@Composable
-fun BottomNavBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
-    NavigationBar {
-        NavigationBarItem(
-            selected = selectedTab == 0,
-            onClick = { onTabSelected(0) },
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-            label = { Text("Home") }
-        )
-        NavigationBarItem(
-            selected = selectedTab == 1,
-            onClick = { onTabSelected(1) },
-            icon = { Icon(Icons.Default.Favorite, contentDescription = "Track") },
-            label = { Text("Track") }
-        )
-        NavigationBarItem(
-            selected = selectedTab == 2,
-            onClick = { onTabSelected(2) },
-            icon = { Icon(Icons.Default.Star, contentDescription = "Meditate") },
-            label = { Text("Meditate") }
-        )
-        NavigationBarItem(
-            selected = selectedTab == 3,
-            onClick = { onTabSelected(3) },
-            icon = { Icon(Icons.Default.Person, contentDescription = "Friends") },
-            label = { Text("Friends") }
-        )
-        NavigationBarItem(
-            selected = selectedTab == 4,
-            onClick = { onTabSelected(4) },
-            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-            label = { Text("Profile") }
-        )
-    }
 }
 
 @Composable
@@ -469,6 +350,42 @@ fun MoodTracker(moodValue: Float = 5f, onMoodChange: (Float) -> Unit = {}) {
     }
 }
 
+@Composable
+fun BottomNavBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
+    NavigationBar {
+        NavigationBarItem(
+            selected = selectedTab == 0,
+            onClick = { onTabSelected(0) },
+            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+            label = { Text("Home") }
+        )
+        NavigationBarItem(
+            selected = selectedTab == 1,
+            onClick = { onTabSelected(1) },
+            icon = { Icon(Icons.Default.Favorite, contentDescription = "Track") },
+            label = { Text("Track") }
+        )
+        NavigationBarItem(
+            selected = selectedTab == 2,
+            onClick = { onTabSelected(2) },
+            icon = { Icon(Icons.Default.Star, contentDescription = "Meditate") },
+            label = { Text("Meditate") }
+        )
+        NavigationBarItem(
+            selected = selectedTab == 3,
+            onClick = { onTabSelected(3) },
+            icon = { Icon(Icons.Default.Person, contentDescription = "Friends") },
+            label = { Text("Friends") }
+        )
+        NavigationBarItem(
+            selected = selectedTab == 4,
+            onClick = { onTabSelected(4) },
+            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+            label = { Text("Profile") }
+        )
+    }
+}
+
 @SuppressLint("DefaultLocale")
 @Composable
 fun WellnessHomeScreen(modifier: Modifier = Modifier, userProfile: UserProfile) {
@@ -484,6 +401,7 @@ fun WellnessHomeScreen(modifier: Modifier = Modifier, userProfile: UserProfile) 
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Welcome message
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFF3E5F5))
@@ -584,6 +502,17 @@ fun TrackingScreen(modifier: Modifier = Modifier, navController: NavController) 
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Detailed Tracking")
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = { navController.navigate("calendar") },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.DateRange, contentDescription = "Calendar")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("View Calendar")
+                }
             }
         }
 
@@ -664,472 +593,34 @@ fun MeditationScreen(modifier: Modifier = Modifier) {
     }
 }
 
-// Enhanced Interactive Friends Screen
 @Composable
 fun FriendsScreen(modifier: Modifier = Modifier) {
-    var selectedTab by remember { mutableIntStateOf(0) }
-    var showAddFriendDialog by remember { mutableStateOf(false) }
-
-    val friends = remember { generateSampleFriends() }
-    val challenges = remember { generateSampleChallenges() }
-    val leaderboard = remember { generateLeaderboard(friends) }
-    val context = LocalContext.current
-
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Friends & Challenges",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            IconButton(onClick = { showAddFriendDialog = true }) {
-                Icon(
-                    Icons.Default.Person,
-                    contentDescription = "Add Friend",
-                    tint = Color(0xFF1976D2)
-                )
-            }
-        }
-
+        Icon(
+            Icons.Default.Person,
+            contentDescription = "Friends",
+            modifier = Modifier.size(64.dp),
+            tint = Color(0xFF1976D2)
+        )
         Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            TabButton("Friends", selectedTab == 0) { selectedTab = 0 }
-            TabButton("Challenges", selectedTab == 1) { selectedTab = 1 }
-            TabButton("Leaderboard", selectedTab == 2) { selectedTab = 2 }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        when (selectedTab) {
-            0 -> FriendsListContent(friends = friends)
-            1 -> ChallengesContent(challenges = challenges)
-            2 -> LeaderboardContent(leaderboard = leaderboard)
-        }
-    }
-
-    if (showAddFriendDialog) {
-        AddFriendDialog(
-            onDismiss = { showAddFriendDialog = false },
-            onAddFriend = { friendCode ->
-                Toast.makeText(context, "Friend request sent to $friendCode", Toast.LENGTH_SHORT).show()
-                showAddFriendDialog = false
-            }
-        )
-    }
-}
-
-@Composable
-fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFF1976D2) else Color(0xFFE3F2FD),
-            contentColor = if (isSelected) Color.White else Color(0xFF1976D2)
-        ),
-        modifier = Modifier.padding(horizontal = 4.dp)
-    ) {
-        Text(text, fontSize = 14.sp)
-    }
-}
-
-@Composable
-fun FriendsListContent(friends: List<Friend>) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
         Text(
-            text = "Your Friends (${friends.size})",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold
+            text = "Friends & Challenges",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
         )
-
-        friends.forEach { friend ->
-            FriendCard(friend = friend)
-        }
-    }
-}
-
-@Composable
-fun FriendCard(friend: Friend) {
-    val context = LocalContext.current
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                Toast.makeText(context, "Viewing ${friend.name}'s profile", Toast.LENGTH_SHORT).show()
-            },
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E8))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .clip(CircleShape)
-                        .background(getProfilePictureColor(friend.profilePictureIndex)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = friend.name.first().toString(),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = friend.name,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        if (friend.isOnline) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFF4CAF50))
-                            )
-                        }
-                    }
-
-                    Text(
-                        text = "${friend.currentSteps}/${friend.stepGoal} steps",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-
-                    Text(
-                        text = if (friend.isOnline) "Online" else "Last seen ${friend.lastActive}",
-                        fontSize = 12.sp,
-                        color = if (friend.isOnline) Color(0xFF4CAF50) else Color.Gray
-                    )
-                }
-            }
-
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "🔥 ${friend.streak}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "day streak",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun ChallengesContent(challenges: List<Challenge>) {
-    val context = LocalContext.current
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Active Challenges",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Button(
-                onClick = {
-                    Toast.makeText(context, "Create new challenge", Toast.LENGTH_SHORT).show()
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-            ) {
-                Text("Create", fontSize = 12.sp)
-            }
-        }
-
-        challenges.forEach { challenge ->
-            ChallengeCard(challenge = challenge)
-        }
-    }
-}
-
-@Composable
-fun ChallengeCard(challenge: Challenge) {
-    val context = LocalContext.current
-    val progressPercentage = (challenge.progress / challenge.maxProgress * 100).roundToInt()
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                Toast.makeText(context, "Viewing ${challenge.title} details", Toast.LENGTH_SHORT).show()
-            },
-        colors = CardDefaults.cardColors(
-            containerColor = if (challenge.isActive) Color(0xFFFFF3E0) else Color(0xFFF5F5F5)
-        )
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = challenge.title,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        text = challenge.description,
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                }
-
-                Text(
-                    text = getChallengeTypeEmoji(challenge.type),
-                    fontSize = 24.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (challenge.isActive) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xFFE0E0E0))
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .fillMaxWidth(challenge.progress / challenge.maxProgress)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Color(0xFF4CAF50))
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "$progressPercentage% complete",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "👥 ${challenge.participants.size} participants",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    text = "⏱️ ${challenge.duration}",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-
-            if (challenge.prize.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Prize: ${challenge.prize}",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF1976D2)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun LeaderboardContent(leaderboard: List<Leaderboard>) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "This Week's Leaders",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold
+            text = "Connect with friends and join challenges",
+            fontSize = 16.sp,
+            color = Color.Gray
         )
-
-        leaderboard.forEach { entry ->
-            LeaderboardCard(entry = entry)
-        }
     }
-}
-
-@Composable
-fun LeaderboardCard(entry: Leaderboard) {
-    val rankColor = when (entry.rank) {
-        1 -> Color(0xFFFFD700)
-        2 -> Color(0xFFC0C0C0)
-        3 -> Color(0xFFCD7F32)
-        else -> Color(0xFFE0E0E0)
-    }
-
-    val rankEmoji = when (entry.rank) {
-        1 -> "🥇"
-        2 -> "🥈"
-        3 -> "🥉"
-        else -> "${entry.rank}"
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (entry.rank <= 3) Color(0xFFFFF8E1) else Color(0xFFF5F5F5)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(rankColor),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = rankEmoji,
-                        fontSize = if (entry.rank <= 3) 20.sp else 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(getProfilePictureColor(entry.profilePictureIndex)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = entry.name.first().toString(),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Text(
-                    text = entry.name,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            Text(
-                text = "${entry.score} pts",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1976D2)
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddFriendDialog(
-    onDismiss: () -> Unit,
-    onAddFriend: (String) -> Unit
-) {
-    var friendCode by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Add Friend") },
-        text = {
-            Column {
-                Text("Enter your friend's code or username:")
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = friendCode,
-                    onValueChange = { friendCode = it },
-                    label = { Text("Friend Code") },
-                    placeholder = { Text("e.g., FRIEND123") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onAddFriend(friendCode) },
-                enabled = friendCode.isNotBlank()
-            ) {
-                Text("Send Request")
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Gray,
-                    contentColor = Color.White
-                )
-            ) {
-                Text("Cancel")
-            }
-        }
-    )
 }
 
 @Composable
@@ -1162,6 +653,7 @@ fun ProfileScreen(
             }
         }
 
+        // Profile Picture and Name
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E8))
@@ -1172,6 +664,7 @@ fun ProfileScreen(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Profile Picture Placeholder
                 Box(
                     modifier = Modifier
                         .size(80.dp)
@@ -1197,6 +690,7 @@ fun ProfileScreen(
             }
         }
 
+        // Goals Overview
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
@@ -1210,6 +704,7 @@ fun ProfileScreen(
             }
         }
 
+        // Quick Actions
         Button(
             onClick = { navController.navigate("profile_settings") },
             modifier = Modifier.fillMaxWidth()
@@ -1258,6 +753,7 @@ fun ProfileSettingsScreen(
                 actions = {
                     IconButton(
                         onClick = {
+                            // Validate and save changes
                             val stepGoal = tempStepGoal.toIntOrNull() ?: userProfile.stepGoal
                             val waterGoal = tempWaterGoal.toFloatOrNull() ?: userProfile.waterGoal
                             val sleepGoal = tempSleepGoal.toFloatOrNull() ?: userProfile.sleepGoal
@@ -1289,6 +785,7 @@ fun ProfileSettingsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Profile Picture Selection
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E8))
@@ -1327,6 +824,7 @@ fun ProfileSettingsScreen(
                 }
             }
 
+            // Name Setting
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
@@ -1344,6 +842,7 @@ fun ProfileSettingsScreen(
                 }
             }
 
+            // Goals Settings
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
@@ -1378,11 +877,24 @@ fun ProfileSettingsScreen(
                     )
                 }
             }
+
+            // Tips Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF3E5F5))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("💡 Tips", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("• Set realistic goals that you can achieve consistently")
+                    Text("• Adjust your goals as you progress in your fitness journey")
+                    Text("• Remember: Small daily improvements lead to big results!")
+                }
+            }
         }
     }
 }
 
-// Additional screens remain the same...
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
@@ -1408,6 +920,7 @@ fun CalendarScreen(
                 .padding(padding)
                 .padding(16.dp)
         ) {
+            // Legend
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
@@ -1430,6 +943,7 @@ fun CalendarScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Calendar Grid
             Text(
                 text = "Last 30 Days",
                 fontSize = 20.sp,
@@ -1450,6 +964,7 @@ fun CalendarScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Statistics
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E8))
@@ -1477,7 +992,9 @@ fun CalendarScreen(
 
 @Composable
 fun LegendItem(emoji: String, label: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Text(emoji, fontSize = 16.sp)
         Spacer(modifier = Modifier.width(4.dp))
         Text(label, fontSize = 12.sp)
@@ -1493,10 +1010,10 @@ fun CalendarDayItem(dayData: DailyGoals) {
     ).count { it }
 
     val backgroundColor = when (goalsAchieved) {
-        3 -> Color(0xFF4CAF50)
-        2 -> Color(0xFFFF9800)
-        1 -> Color(0xFFFFC107)
-        else -> Color(0xFFF44336)
+        3 -> Color(0xFF4CAF50) // Green - All goals
+        2 -> Color(0xFFFF9800) // Orange - 2 goals
+        1 -> Color(0xFFFFC107) // Yellow - 1 goal
+        else -> Color(0xFFF44336) // Red - No goals
     }
 
     val today = now()
@@ -1514,7 +1031,9 @@ fun CalendarDayItem(dayData: DailyGoals) {
             ),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
                 text = dayData.date.dayOfMonth.toString(),
                 fontSize = 12.sp,
@@ -1532,7 +1051,6 @@ fun CalendarDayItem(dayData: DailyGoals) {
     }
 }
 
-// Other screens (HomeScreen, SecondScreen, etc.) remain the same as in your original code
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController, modifier: Modifier = Modifier) {
@@ -1704,12 +1222,41 @@ fun AchievementsScreen(navController: NavController, modifier: Modifier = Modifi
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            AchievementCard("Step Master", "Walk 10,000 steps in a day", true)
-            AchievementCard("Hydration Hero", "Drink 2L of water daily for 7 days", true)
-            AchievementCard("Sleep Champion", "Get 8 hours of sleep for 5 consecutive nights", false)
-            AchievementCard("Meditation Master", "Complete 30 meditation sessions", false)
-            AchievementCard("Consistency King", "Meet all daily goals for 7 days straight", false)
-            AchievementCard("Perfect Week", "Complete all goals for an entire week", true)
+            AchievementCard(
+                title = "Step Master",
+                description = "Walk 10,000 steps in a day",
+                isCompleted = true
+            )
+
+            AchievementCard(
+                title = "Hydration Hero",
+                description = "Drink 2L of water daily for 7 days",
+                isCompleted = true
+            )
+
+            AchievementCard(
+                title = "Sleep Champion",
+                description = "Get 8 hours of sleep for 5 consecutive nights",
+                isCompleted = false
+            )
+
+            AchievementCard(
+                title = "Meditation Master",
+                description = "Complete 30 meditation sessions",
+                isCompleted = false
+            )
+
+            AchievementCard(
+                title = "Consistency King",
+                description = "Meet all daily goals for 7 days straight",
+                isCompleted = false
+            )
+
+            AchievementCard(
+                title = "Perfect Week",
+                description = "Complete all goals for an entire week",
+                isCompleted = true
+            )
         }
     }
 }
@@ -1812,14 +1359,6 @@ fun PreviewWellnessHomeScreen() {
 fun PreviewMeditationScreen() {
     FitnessCheckTheme {
         MeditationScreen()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewFriendsScreen() {
-    FitnessCheckTheme {
-        FriendsScreen()
     }
 }
 

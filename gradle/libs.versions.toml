@@ -15,6 +15,7 @@ navigationRuntimeAndroid = "2.9.0"
 navigationComposeJvmstubs = "2.9.0"
 ui = "1.8.3"
 uiToolingPreview = "1.5.4"
+roomRuntimeAndroid = "2.7.2"
 
 [libraries]
 androidx-activity-compose-v180 = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
@@ -38,6 +39,7 @@ androidx-navigation-compose-jvmstubs = { group = "androidx.navigation", name = "
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "uiToolingPreview" }
+androidx-room-runtime-android = { group = "androidx.room", name = "room-runtime-android", version.ref = "roomRuntimeAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
