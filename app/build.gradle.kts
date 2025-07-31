@@ -53,10 +53,17 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.runtime.android)
     implementation(libs.androidx.room.runtime.android)
-    implementation ("androidx.room:room-runtime:2.5.0")
-    implementation ("androidx.room:room-ktx:2.5.0")
-    kapt ("androidx.room:room-compiler:2.7.2")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation (libs.androidx.room.runtime)
+    implementation (libs.androidx.room.ktx)
+    kapt (libs.androidx.room.compiler)
+    implementation (libs.lifecycle.viewmodel.compose)
+
+    // ViewModel and LiveData
+    implementation(libs.lifecycle.viewmodel.compose)
+// Coroutines
+    implementation(libs.kotlinx.coroutines.android)
+// Navigation
+    implementation(libs.androidx.navigation.compose.v275)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
