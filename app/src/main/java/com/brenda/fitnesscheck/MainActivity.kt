@@ -1,4 +1,3 @@
-// Enhanced Interactive Jetpack Compose Fitness Check App with Profile Settings and Calendar
 package com.brenda.fitnesscheck
 
 import android.annotation.SuppressLint
@@ -90,7 +89,6 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
-// Data classes for managing user data
 data class UserProfile(
     var name: String = "Brenda",
     var stepGoal: Int = 10000,
@@ -134,10 +132,10 @@ fun FitnessCheckTheme(content: @Composable () -> Unit) {
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    // Shared user profile state
+
     var userProfile by remember { mutableStateOf(UserProfile()) }
 
-    // Generate sample calendar data
+
     val calendarData = remember { generateSampleCalendarData() }
 
     NavHost(navController, startDestination = "wellness_home") {
@@ -161,7 +159,6 @@ fun AppNavigation() {
     }
 }
 
-// Helper function to generate sample calendar data
 fun generateSampleCalendarData(): List<DailyGoals> {
     val today = now()
     val data = mutableListOf<DailyGoals>()
@@ -182,7 +179,7 @@ fun generateSampleCalendarData(): List<DailyGoals> {
     return data
 }
 
-// Helper function for profile picture colors
+
 fun getProfilePictureColor(index: Int): Color {
     val colors = listOf(
         Color(0xFF1976D2), // Blue
@@ -653,7 +650,7 @@ fun ProfileScreen(
             }
         }
 
-        // Profile Picture and Name
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E8))
@@ -690,7 +687,7 @@ fun ProfileScreen(
             }
         }
 
-        // Goals Overview
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
