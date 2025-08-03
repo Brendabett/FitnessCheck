@@ -49,3 +49,22 @@ FitnessCheck copy/
 ├── build.gradle.kts
 ├── settings.gradle.kts
 └── gradle.properties
+
+🚀 Getting Started
+Prerequisites
+Android Studio Giraffe or later
+
+JDK 17+
+
+Kotlin 1.9+
+
+Gradle 8.x
+
+Installation
+Clone the repository:
+git clone https://github.com/your-username/fitnesscheck.git
+
+Open in Android Studio:
+
+File → Open → Select 'FitnessCheck copy' folder
+
