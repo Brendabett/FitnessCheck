@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.brenda.fitnesscheck"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.brenda.fitnesscheck"
@@ -41,7 +41,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -53,17 +52,20 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.runtime.android)
     implementation(libs.androidx.room.runtime.android)
-    implementation (libs.androidx.room.runtime)
-    implementation (libs.androidx.room.ktx)
-    kapt (libs.androidx.room.compiler)
-    implementation (libs.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
+    implementation(libs.lifecycle.viewmodel.compose)
 
     // ViewModel and LiveData
     implementation(libs.lifecycle.viewmodel.compose)
-// Coroutines
+    // Coroutines
     implementation(libs.kotlinx.coroutines.android)
-// Navigation
+    // Navigation
     implementation(libs.androidx.navigation.compose.v275)
+
+    // ADD THIS - Material Icons Extended (CRUCIAL for your app)
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
