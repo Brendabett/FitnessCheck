@@ -1,7 +1,6 @@
 package com.brenda.fitnesscheck.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.brenda.fitnesscheck.database.UserProfileEntity
 import com.brenda.fitnesscheck.repository.UserProfileRepository
@@ -9,8 +8,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-// REMOVED duplicate UserProfile data class - using the one from MainActivity
 
 class UserProfileViewModel(private val repository: UserProfileRepository) : ViewModel() {
 
@@ -145,13 +142,6 @@ class UserProfileViewModel(private val repository: UserProfileRepository) : View
     }
 
     /**
-     * Convenience method to get current profile as UI model
-     */
-    fun getCurrentProfileAsUIModel(): UserProfileEntity? {
-        return _userProfile.value
-    }
-
-    /**
      * Batch update multiple fields efficiently
      */
     fun updateMultipleFields(
@@ -184,21 +174,10 @@ class UserProfileViewModel(private val repository: UserProfileRepository) : View
     }
 
     /**
-     * Additional helper functions for better usability
-     */
-
-    /**
      * Check if profile is loaded
      */
     fun isProfileLoaded(): Boolean {
         return _userProfile.value != null && !_isLoading.value
-    }
-
-    /**
-     * Get profile synchronously (use with caution)
-     */
-    fun getProfileSnapshot(): UserProfileEntity? {
-        return _userProfile.value
     }
 
     /**
@@ -263,20 +242,5 @@ class UserProfileViewModel(private val repository: UserProfileRepository) : View
                 _isLoading.value = false
             }
         }
-    }
-}
-
-/**
- * Factory for creating UserProfileViewModel with repository dependency
- */
-class UserProfileViewModelFactory(
-    private val repository: UserProfileRepository
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(UserProfileViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return UserProfileViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }

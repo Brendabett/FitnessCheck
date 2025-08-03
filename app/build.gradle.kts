@@ -2,12 +2,12 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id ("kotlin-kapt")
+    id("kotlin-kapt")
 }
 
 android {
     namespace = "com.brenda.fitnesscheck"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.brenda.fitnesscheck"
@@ -38,35 +38,48 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // CRITICAL: Add this to force compatible kapt settings
+    kapt {
+        correctErrorTypes = true
+        useBuildCache = false
+        includeCompileClasspath = false
+    }
 }
 
 dependencies {
-    implementation(libs.androidx.navigation.compose)
+    // Core Android dependencies
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+
+    // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.navigation.runtime.android)
-    implementation(libs.androidx.room.runtime.android)
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    kapt(libs.androidx.room.compiler)
-    implementation(libs.lifecycle.viewmodel.compose)
 
-    // ViewModel and LiveData
-    implementation(libs.lifecycle.viewmodel.compose)
-    // Coroutines
-    implementation(libs.kotlinx.coroutines.android)
-    // Navigation
-    implementation(libs.androidx.navigation.compose.v275)
-
-    // ADD THIS - Material Icons Extended (CRUCIAL for your app)
+    // Material Icons Extended
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
 
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation.runtime.android)
+
+    // FIXED: Use latest Room version that supports Kotlin 2.1.0
+    val roomVersion = "2.7.0-alpha01"  // Latest alpha that supports Kotlin 2.1.0
+    implementation(libs.androidx.room.runtime.v270alpha01)
+    implementation(libs.androidx.room.ktx.v270alpha01)
+    kapt(libs.androidx.room.compiler.v270alpha01)
+
+    // ViewModel and Lifecycle
+    implementation(libs.lifecycle.viewmodel.compose)
+
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.android)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

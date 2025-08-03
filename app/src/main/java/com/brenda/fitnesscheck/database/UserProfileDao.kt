@@ -59,4 +59,22 @@ interface UserProfileDao {
      */
     @Query("SELECT COUNT(*) FROM user_profile WHERE id = 1")
     suspend fun profileExists(): Int
+
+    /**
+     * Get profile creation timestamp
+     */
+    @Query("SELECT createdAt FROM user_profile WHERE id = 1 LIMIT 1")
+    suspend fun getProfileCreationTime(): Long?
+
+    /**
+     * Get profile last updated timestamp
+     */
+    @Query("SELECT updatedAt FROM user_profile WHERE id = 1 LIMIT 1")
+    suspend fun getProfileLastUpdatedTime(): Long?
+
+    /**
+     * Update only the timestamp (useful for tracking activity)
+     */
+    @Query("UPDATE user_profile SET updatedAt = :updatedAt WHERE id = 1")
+    suspend fun updateTimestamp(updatedAt: Long = System.currentTimeMillis())
 }

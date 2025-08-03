@@ -1,5 +1,6 @@
 package com.brenda.fitnesscheck.screen
 
+import android.annotation.SuppressLint
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,8 +15,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -226,6 +229,7 @@ fun HomeScreen(
 }
 
 // Screen 2: Enhanced Fitness Screen with Database Integration
+@SuppressLint("DefaultLocale")
 @Composable
 fun FitnessScreen(
     modifier: Modifier = Modifier,
@@ -252,7 +256,7 @@ fun FitnessScreen(
             value = steps.toString(),
             unit = "steps",
             goal = userProfile.stepGoal.toString(),
-            icon = Icons.Default.DirectionsWalk,
+            icon = Icons.AutoMirrored.Filled.DirectionsWalk,
             isGoalAchieved = steps >= userProfile.stepGoal,
             onIncrement = { steps += 100 },
             onDecrement = { if (steps > 0) steps -= 100 }
@@ -396,7 +400,7 @@ fun ProfileScreen(
     }
 }
 
-// Component Composables
+// Component Composable
 @Composable
 fun WelcomeCard(userName: String) {
     Card(
@@ -436,7 +440,7 @@ fun QuickStatsRow(challengeCount: Int, stepGoal: Int, waterGoal: Float) {
         QuickStatCard(
             title = "Step Goal",
             value = stepGoal.toString(),
-            icon = Icons.Default.DirectionsWalk,
+            icon = Icons.AutoMirrored.Filled.DirectionsWalk,
             color = Color(0xFF2196F3),
             modifier = Modifier.weight(1f)
         )
@@ -627,7 +631,7 @@ fun GoalAdjustmentCard(userProfile: UserProfile, profileViewModel: UserProfileVi
     }
 }
 
-// Helper Composables
+// Helper Composable
 @Composable
 fun ScreenTitle(title: String) {
     Text(
@@ -886,7 +890,7 @@ fun ActionButtonsColumn(navController: NavController, profileViewModel: UserProf
     }
 }
 
-// Shared Helper Composables
+// Shared Helper Composable
 @Composable
 fun QuickStatCard(
     title: String,
@@ -924,10 +928,11 @@ fun ProgressItem(title: String, current: String, goal: String, progress: Float) 
         }
         Spacer(modifier = Modifier.height(4.dp))
         LinearProgressIndicator(
-            progress = progress,
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFF4CAF50),
-            trackColor = Color(0xFFE0E0E0)
+        progress = { progress },
+        modifier = Modifier.fillMaxWidth(),
+        color = Color(0xFF4CAF50),
+        trackColor = Color(0xFFE0E0E0),
+        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
         )
     }
 }
@@ -1282,7 +1287,7 @@ fun com.brenda.fitnesscheck.database.ChallengeEntity.toChallenge(): Challenge {
     )
 }
 
-// Placeholder composables for missing components
+// Placeholder composable for missing components
 @Composable
 fun EmptyChallengesCard(onCreateChallenge: () -> Unit) {
     Card(
@@ -1389,9 +1394,11 @@ fun ChallengeCard(
             if (challenge.isActive) {
                 Spacer(modifier = Modifier.height(8.dp))
                 LinearProgressIndicator(
-                    progress = challenge.progress / challenge.maxProgress,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFF4CAF50)
+                progress = { challenge.progress / challenge.maxProgress },
+                modifier = Modifier.fillMaxWidth(),
+                color = Color(0xFF4CAF50),
+                trackColor = ProgressIndicatorDefaults.linearTrackColor,
+                strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(

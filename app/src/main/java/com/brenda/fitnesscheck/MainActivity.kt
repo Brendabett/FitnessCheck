@@ -20,13 +20,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,6 +64,7 @@ data class UserProfile(
     var profilePictureIndex: Int = 0
 )
 
+// Extension functions for UserProfile conversion
 fun UserProfile.toEntity(): UserProfileEntity {
     return UserProfileEntity(
         id = 1,
@@ -376,6 +381,7 @@ fun BottomNavBar(selectedTab: Int, onTabSelected: (Int) -> Unit) {
 }
 
 // Screen 1: Enhanced Home Screen
+@SuppressLint("DefaultLocale")
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -444,7 +450,7 @@ fun HomeScreen(
             ClickableQuickStatCard(
                 title = "Step Goal",
                 value = "${userProfile.stepGoal}",
-                icon = Icons.Default.DirectionsWalk,
+                icon = Icons.AutoMirrored.Filled.DirectionsWalk,
                 color = Color(0xFF2196F3),
                 modifier = Modifier.weight(1f),
                 onClick = {
@@ -593,7 +599,7 @@ fun HomeScreen(
                             fontWeight = FontWeight.SemiBold
                         )
                         Icon(
-                            Icons.Default.ArrowForward,
+                            Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = "View all",
                             tint = Color(0xFF4CAF50),
                             modifier = Modifier.size(20.dp)
@@ -714,7 +720,7 @@ fun HomeScreen(
 fun ClickableQuickStatCard(
     title: String,
     value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     color: Color,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
@@ -811,10 +817,11 @@ fun ClickableDynamicProgressItem(
             // Progress bar with achievement indicator
             Box(modifier = Modifier.fillMaxWidth()) {
                 LinearProgressIndicator(
-                    progress = progress,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = if (progress >= 1.0f) Color(0xFF4CAF50) else Color(0xFF2196F3),
-                    trackColor = Color(0xFFE0E0E0)
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+                color = if (progress >= 1.0f) Color(0xFF4CAF50) else Color(0xFF2196F3),
+                trackColor = Color(0xFFE0E0E0),
+                strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
                 )
 
                 // Achievement checkmark
@@ -889,10 +896,11 @@ fun DynamicProgressItem(
         // Progress bar with achievement indicator
         Box(modifier = Modifier.fillMaxWidth()) {
             LinearProgressIndicator(
-                progress = progress,
-                modifier = Modifier.fillMaxWidth(),
-                color = if (progress >= 1.0f) Color(0xFF4CAF50) else Color(0xFF2196F3),
-                trackColor = Color(0xFFE0E0E0)
+            progress = { progress },
+            modifier = Modifier.fillMaxWidth(),
+            color = if (progress >= 1.0f) Color(0xFF4CAF50) else Color(0xFF2196F3),
+            trackColor = Color(0xFFE0E0E0),
+            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
             )
 
             // Achievement checkmark
@@ -922,6 +930,7 @@ fun DynamicProgressItem(
 }
 
 // Screen 2: Enhanced Fitness Screen
+@SuppressLint("DefaultLocale")
 @Composable
 fun FitnessScreen(
     modifier: Modifier = Modifier,
@@ -959,7 +968,7 @@ fun FitnessScreen(
             isGoalAchieved = steps >= userProfile.stepGoal,
             onIncrement = { steps += 100 },
             onDecrement = { if (steps > 0) steps -= 100 },
-            icon = Icons.Default.DirectionsWalk
+            icon = Icons.AutoMirrored.Filled.DirectionsWalk
         )
 
         InteractiveCard(
@@ -1346,12 +1355,12 @@ fun GoalAdjustmentCard(userProfile: UserProfile, userProfileViewModel: UserProfi
     }
 }
 
-// Helper Composables
+// Helper Composable
 @Composable
 fun QuickStatCard(
     title: String,
     value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     color: Color,
     modifier: Modifier = Modifier
 ) {
@@ -1384,10 +1393,11 @@ fun ProgressItem(title: String, current: String, goal: String, progress: Float) 
         }
         Spacer(modifier = Modifier.height(4.dp))
         LinearProgressIndicator(
-            progress = progress,
+            progress = { progress },
             modifier = Modifier.fillMaxWidth(),
             color = Color(0xFF4CAF50),
-            trackColor = Color(0xFFE0E0E0)
+            trackColor = Color(0xFFE0E0E0),
+            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
         )
     }
 }
@@ -1401,7 +1411,7 @@ fun InteractiveCard(
     isGoalAchieved: Boolean,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
-    icon: androidx.compose.ui.graphics.vector.ImageVector
+    icon: ImageVector
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -2254,5 +2264,16 @@ fun CalendarDayItem(dayData: DailyGoals) {
 fun PreviewMainApp() {
     FitnessCheckTheme {
         // Preview would need mock data
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Text(
+                text = "Fitness Check App",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
     }
 }

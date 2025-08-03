@@ -46,9 +46,9 @@ abstract class FitnessDatabase : RoomDatabase() {
          * This preserves your existing challenge data while adding profile support
          */
         private val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Create the user_profile table
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE IF NOT EXISTS `user_profile` (
                         `id` INTEGER NOT NULL,
                         `name` TEXT NOT NULL,
@@ -64,7 +64,7 @@ abstract class FitnessDatabase : RoomDatabase() {
 
                 // Insert default profile for existing users
                 val currentTime = System.currentTimeMillis()
-                database.execSQL("""
+                db.execSQL("""
                     INSERT OR REPLACE INTO `user_profile` 
                     (`id`, `name`, `stepGoal`, `waterGoal`, `sleepGoal`, `profilePictureIndex`, `createdAt`, `updatedAt`) 
                     VALUES (1, 'Brenda', 10000, 2.0, 8.0, 0, $currentTime, $currentTime)
@@ -80,7 +80,7 @@ abstract class FitnessDatabase : RoomDatabase() {
                     "fitness_database"
                 )
                     .addMigrations(MIGRATION_1_2)  // Add migration for production
-                    .fallbackToDestructiveMigration()  // For development - remove in production
+                    .fallbackToDestructiveMigration(false)  // For development - remove in production
                     .build()
 
                 INSTANCE = instance
