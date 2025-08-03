@@ -50,6 +50,7 @@ FitnessCheck copy/
 ├── settings.gradle.kts
 └── gradle.properties
 
+---
 ## 🚀 Getting Started
 Prerequisites
 Android Studio Giraffe or later
@@ -59,6 +60,8 @@ JDK 17+
 Kotlin 1.9+
 
 Gradle 8.x
+
+---
 
 Installation
 Clone the repository:
@@ -88,3 +91,6 @@ Brenda Chelimo – Developer & Designer
 
 ## 📄 License
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+
+
