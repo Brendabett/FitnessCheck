@@ -50,7 +50,7 @@ FitnessCheck copy/
 ├── settings.gradle.kts
 └── gradle.properties
 
-🚀 Getting Started
+## 🚀 Getting Started
 Prerequisites
 Android Studio Giraffe or later
 
@@ -68,3 +68,23 @@ Open in Android Studio:
 
 File → Open → Select 'FitnessCheck copy' folder
 
+Sync Gradle and run the app on an emulator or physical device.
+
+## 🎨 Styling Notes (CSS-like in Jetpack Compose)
+Although Android apps don’t use traditional CSS, styling is handled via Jetpack Compose like so:
+
+Text(
+    text = "Welcome",
+    style = MaterialTheme.typography.titleLarge,
+    modifier = Modifier
+        .padding(16.dp)
+        .background(Color.White)
+        .clip(RoundedCornerShape(8.dp))
+)
+If you're documenting UI styles in the README, you can format them in a similar Kotlin code block. No need to replicate actual CSS.
+
+## 👥 Contributors
+Brenda Chelimo – Developer & Designer
+
+## 📄 License
+This project is licensed under the MIT License - see the LICENSE file for details.
