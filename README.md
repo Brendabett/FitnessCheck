@@ -6,12 +6,17 @@
 
 ## 📱 Features
 
-- Personalized fitness challenges
-- Daily and weekly workout logging
-- Health metrics tracking (e.g., weight, steps)
-- Dark and light theme support
-- Jetpack Compose-based UI
-- Navigation component architecture
+🔥 Create and manage personalized fitness challenges
+
+📈 Track workout progress and completion
+
+📅 View daily/weekly workout schedules
+
+🎯 Set fitness goals and reminders
+
+🌙 Light/Dark mode support
+
+🧠 Designed using Jetpack Compose for modern UI
 
 ---
 
