@@ -29,7 +29,6 @@
 
 ---
 
-
 ## 📂 Project Structure
 
 ```bash
@@ -47,34 +46,40 @@ FitnessCheck copy/
 └── gradle.properties
 ```
 
+---
+
 ## 🚀 Getting Started
-Prerequisites
-Android Studio Giraffe or later
 
-JDK 17+
+### Prerequisites
 
-Kotlin 1.9+
+- Android Studio Giraffe or later
+- JDK 17+
+- Kotlin 1.9+
+- Gradle 8.x
 
-Gradle 8.x
+### Installation
 
-## Installation
 1. Clone the repository:
 
 ```bash
-
 git clone https://github.com/your-username/fitnesscheck.git
-Open in Android Studio:
 ```
-2. Open in Android Studio
-```bash
-File → Open → Select 'FitnessCheck copy' folder
-```
+
+2. Open in Android Studio:
+
+   ```
+   File → Open → Select 'FitnessCheck copy' folder
+   ```
+
 3. Sync Gradle and run the app on an emulator or physical device.
 
+---
+
 ## 🎨 Styling Notes (CSS-like in Jetpack Compose)
+
 Although Android apps don’t use traditional CSS, styling is handled via Jetpack Compose like so:
 
-```bash
+```kotlin
 Text(
     text = "Welcome",
     style = MaterialTheme.typography.titleLarge,
@@ -85,8 +90,16 @@ Text(
 )
 ```
 
+If you're documenting UI styles in the README, you can format them in a similar Kotlin code block. No need to replicate actual CSS.
+
+---
+
 ## 👥 Contributors
-Brenda Chelimo – Developer & Designer
+
+- **Brenda Chelimo** – Developer & Designer  
+
+---
 
 ## 📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
