@@ -69,6 +69,7 @@ FitnessCheck/
 ├── build.gradle
 ├── settings.gradle
 └── README.md
+
 ✍️ Contributors
 Brenda Chelimo – @Brendabett
 
