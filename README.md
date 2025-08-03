@@ -1,77 +1,46 @@
-📱 FitnessCheck
-FitnessCheck is a personal fitness tracking Android app designed to help users monitor their progress, set workout challenges, and maintain a healthy lifestyle.
+# 🏋️‍♀️ FitnessCheck
 
-🧩 Features
-🔥 Create and manage personalized fitness challenges
+**FitnessCheck** is a Kotlin-based Android application designed to help users track their fitness progress, set workout goals, and stay motivated with structured routines and performance metrics.
 
-📈 Track workout progress and completion
+---
 
-📅 View daily/weekly workout schedules
+## 📱 Features
 
-🎯 Set fitness goals and reminders
+- Personalized fitness challenges
+- Daily and weekly workout logging
+- Health metrics tracking (e.g., weight, steps)
+- Dark and light theme support
+- Jetpack Compose-based UI
+- Navigation component architecture
 
-🌙 Light/Dark mode support
+---
 
-🧠 Designed using Jetpack Compose for modern UI
+## 🛠️ Tech Stack
 
-🛠️ Built With
-Language: Kotlin
+| Layer         | Technologies                                      |
+|---------------|---------------------------------------------------|
+| Language      | Kotlin                                             |
+| UI            | Jetpack Compose, Material 3                        |
+| Architecture  | MVVM (Model-View-ViewModel)                        |
+| Backend       | Local storage (Room DB or SharedPreferences)      |
+| Build Tool    | Gradle (KTS-based)                                 |
+| Testing       | JUnit, AndroidX Test                               |
+| Others        | Git, GitHub, Android Studio                       |
 
-Architecture: MVVM (Model-View-ViewModel)
+---
 
-UI: Jetpack Compose
+## 📂 Project Structure
 
-Navigation: Jetpack Navigation Component
-
-Dependency Injection: Dagger-Hilt or Koin (if applicable)
-
-Database: Room (if applicable)
-
-Version Control: Git
-
-🚀 Getting Started
-Prerequisites
-Android Studio (Hedgehog or newer)
-
-Android SDK 33+
-
-Kotlin 1.9+
-
-Gradle 8+
-
-Installation
-Clone this repository:
-
-bash
-Copy
-Edit
-git clone https://github.com/Brenda/FitnessCheck.git
-Open it in Android Studio
-
-Let Gradle sync and build the project
-
-Run the app on an emulator or physical Android device
-
-📂 Project Structure
-css
-Copy
-Edit
-FitnessCheck/
+```bash
+FitnessCheck copy/
 ├── app/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/com/brenda/fitnesscheck/
-│   │   │   ├── ui/
-│   │   │   ├── model/
-│   │   │   ├── navigation/
-│   │   │   └── ...
-│   │   └── res/
-├── build.gradle
-├── settings.gradle
-└── README.md
-
-✍️ Contributors
-Brenda Chelimo – @Brendabett
-
-📃 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+│   │   │   ├── res/
+│   │   │   └── AndroidManifest.xml
+│   ├── build.gradle.kts
+│   └── proguard-rules.pro
+├── build.gradle.kts
+├── settings.gradle.kts
+└── gradle.properties
