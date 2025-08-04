@@ -76,8 +76,6 @@ data class NavigationItem(
     val label: String,
     val icon: ImageVector
 )
-// Add these conversion functions right after your data classes and before the @Composable functions
-// Place them after line 73 (after the NavigationItem data class)
 
 @Composable
 fun FourScreenApp(
@@ -188,7 +186,7 @@ fun AppBottomNavigationBar(
     }
 }
 
-// Screen 1: Enhanced Home Screen
+// Screen 1: Home Screen
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -292,7 +290,7 @@ fun FitnessScreen(
     }
 }
 
-// Screen 3: Enhanced Challenges Screen
+// Screen 3: Challenges Screen
 @Composable
 fun ChallengesScreen(
     modifier: Modifier = Modifier,
@@ -358,7 +356,7 @@ fun ChallengesScreen(
     }
 }
 
-// Screen 4: Enhanced Profile Screen with Database Integration
+// Screen 4: Profile Screen with Database Integration
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
@@ -964,7 +962,7 @@ fun StatItem(title: String, value: String) {
     }
 }
 
-// Additional screens placeholders - these would be in separate files
+// Additional screens placeholders
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(navController: NavController, calendarData: List<DailyGoals>) {

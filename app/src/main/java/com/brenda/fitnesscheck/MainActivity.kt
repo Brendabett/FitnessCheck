@@ -94,17 +94,6 @@ data class DailyGoals(
     val moodLogged: Boolean = false
 )
 
-data class Friend(
-    val id: String,
-    val name: String,
-    val profilePictureIndex: Int,
-    val currentSteps: Int = 0,
-    val stepGoal: Int = 10000,
-    val isOnline: Boolean = false,
-    val lastActive: String = "",
-    val streak: Int = 0
-)
-
 data class Challenge(
     val id: String,
     val title: String,
@@ -121,14 +110,6 @@ data class Challenge(
 enum class ChallengeType {
     STEPS, WATER, SLEEP, MEDITATION, MIXED
 }
-
-data class Leaderboard(
-    val friendId: String,
-    val name: String,
-    val score: Int,
-    val profilePictureIndex: Int,
-    val rank: Int
-)
 
 // Extension functions to convert between Challenge and ChallengeEntity
 fun Challenge.toChallengeEntity(): ChallengeEntity {
@@ -851,85 +832,7 @@ fun ClickableDynamicProgressItem(
     }
 }
 
-@Composable
-fun DynamicProgressItem(
-    title: String,
-    current: String,
-    goal: String,
-    progress: Float,
-    onQuickAdd: () -> Unit,
-    icon: String
-) {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(icon, fontSize = 16.sp)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("$current / $goal", fontSize = 14.sp, color = Color.Gray)
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Quick add button
-                IconButton(
-                    onClick = onQuickAdd,
-                    modifier = Modifier.size(24.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Quick add",
-                        tint = Color(0xFF4CAF50),
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Progress bar with achievement indicator
-        Box(modifier = Modifier.fillMaxWidth()) {
-            LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier.fillMaxWidth(),
-            color = if (progress >= 1.0f) Color(0xFF4CAF50) else Color(0xFF2196F3),
-            trackColor = Color(0xFFE0E0E0),
-            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-            )
-
-            // Achievement checkmark
-            if (progress >= 1.0f) {
-                Row(
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Default.CheckCircle,
-                        contentDescription = "Achieved",
-                        tint = Color(0xFF4CAF50),
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-        }
-
-        // Progress percentage
-        Text(
-            text = "${(progress * 100).toInt()}% complete",
-            fontSize = 12.sp,
-            color = if (progress >= 1.0f) Color(0xFF4CAF50) else Color.Gray,
-            modifier = Modifier.padding(top = 2.dp)
-        )
-    }
-}
-
-// Screen 2: Enhanced Fitness Screen
+// Screen 2: Fitness Screen
 @SuppressLint("DefaultLocale")
 @Composable
 fun FitnessScreen(
@@ -1037,7 +940,7 @@ fun FitnessScreen(
     }
 }
 
-// Screen 3: Enhanced Challenges Screen
+// Screen 3: Challenges Screen
 @Composable
 fun ChallengesScreen(
     modifier: Modifier = Modifier,
@@ -1352,53 +1255,6 @@ fun GoalAdjustmentCard(userProfile: UserProfile, userProfileViewModel: UserProfi
                 }
             }
         }
-    }
-}
-
-// Helper Composable
-@Composable
-fun QuickStatCard(
-    title: String,
-    value: String,
-    icon: ImageVector,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = color),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(icon, contentDescription = title, tint = Color.White, modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(value, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            Text(title, fontSize = 12.sp, color = Color.White.copy(alpha = 0.8f))
-        }
-    }
-}
-
-@Composable
-fun ProgressItem(title: String, current: String, goal: String, progress: Float) {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-            Text("$current / $goal", fontSize = 14.sp, color = Color.Gray)
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFF4CAF50),
-            trackColor = Color(0xFFE0E0E0),
-            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-        )
     }
 }
 

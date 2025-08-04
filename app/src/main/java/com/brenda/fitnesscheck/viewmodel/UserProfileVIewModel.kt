@@ -15,10 +15,8 @@ class UserProfileViewModel(private val repository: UserProfileRepository) : View
     val userProfile: StateFlow<UserProfileEntity?> = _userProfile.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
 
     init {
         loadUserProfile()
@@ -44,34 +42,6 @@ class UserProfileViewModel(private val repository: UserProfileRepository) : View
             } catch (e: Exception) {
                 _error.value = "Failed to load profile: ${e.message}"
                 _isLoading.value = false
-            }
-        }
-    }
-
-    /**
-     * Update the entire profile
-     */
-    fun updateProfile(profile: UserProfileEntity) {
-        viewModelScope.launch {
-            try {
-                _error.value = null
-                repository.updateProfile(profile)
-            } catch (e: Exception) {
-                _error.value = "Failed to update profile: ${e.message}"
-            }
-        }
-    }
-
-    /**
-     * Update individual profile fields
-     */
-    fun updateName(name: String) {
-        viewModelScope.launch {
-            try {
-                _error.value = null
-                repository.updateName(name)
-            } catch (e: Exception) {
-                _error.value = "Failed to update name: ${e.message}"
             }
         }
     }
@@ -109,17 +79,6 @@ class UserProfileViewModel(private val repository: UserProfileRepository) : View
         }
     }
 
-    fun updateProfilePictureIndex(index: Int) {
-        viewModelScope.launch {
-            try {
-                _error.value = null
-                repository.updateProfilePictureIndex(index)
-            } catch (e: Exception) {
-                _error.value = "Failed to update profile picture: ${e.message}"
-            }
-        }
-    }
-
     /**
      * Reset profile to default values
      */
@@ -132,13 +91,6 @@ class UserProfileViewModel(private val repository: UserProfileRepository) : View
                 _error.value = "Failed to reset profile: ${e.message}"
             }
         }
-    }
-
-    /**
-     * Clear any error messages
-     */
-    fun clearError() {
-        _error.value = null
     }
 
     /**
@@ -173,74 +125,4 @@ class UserProfileViewModel(private val repository: UserProfileRepository) : View
         }
     }
 
-    /**
-     * Check if profile is loaded
-     */
-    fun isProfileLoaded(): Boolean {
-        return _userProfile.value != null && !_isLoading.value
-    }
-
-    /**
-     * Validate profile data before updating
-     */
-    private fun validateProfileData(
-        name: String? = null,
-        stepGoal: Int? = null,
-        waterGoal: Float? = null,
-        sleepGoal: Float? = null
-    ): String? {
-        return when {
-            name != null && name.isBlank() -> "Name cannot be empty"
-            stepGoal != null && stepGoal <= 0 -> "Step goal must be greater than 0"
-            waterGoal != null && waterGoal <= 0 -> "Water goal must be greater than 0"
-            sleepGoal != null && sleepGoal <= 0 -> "Sleep goal must be greater than 0"
-            else -> null
-        }
-    }
-
-    /**
-     * Safe update with validation
-     */
-    fun updateProfileSafely(profile: UserProfileEntity) {
-        viewModelScope.launch {
-            try {
-                _error.value = null
-
-                val validationError = validateProfileData(
-                    name = profile.name,
-                    stepGoal = profile.stepGoal,
-                    waterGoal = profile.waterGoal,
-                    sleepGoal = profile.sleepGoal
-                )
-
-                if (validationError != null) {
-                    _error.value = validationError
-                    return@launch
-                }
-
-                repository.updateProfile(profile)
-            } catch (e: Exception) {
-                _error.value = "Failed to update profile: ${e.message}"
-            }
-        }
-    }
-
-    /**
-     * Force refresh profile from database
-     */
-    fun refreshProfile() {
-        viewModelScope.launch {
-            try {
-                _isLoading.value = true
-                _error.value = null
-
-                val profile = repository.getUserProfileOnce()
-                _userProfile.value = profile
-                _isLoading.value = false
-            } catch (e: Exception) {
-                _error.value = "Failed to refresh profile: ${e.message}"
-                _isLoading.value = false
-            }
-        }
-    }
 }
