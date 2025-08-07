@@ -4,6 +4,7 @@ import com.brenda.fitnesscheck.database.ChallengeDao
 import com.brenda.fitnesscheck.database.ChallengeEntity
 import kotlinx.coroutines.flow.Flow
 
+@Suppress("unused")
 class ChallengeRepository(private val challengeDao: ChallengeDao) {
 
     /**

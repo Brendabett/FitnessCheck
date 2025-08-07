@@ -1,8 +1,8 @@
+@file:Suppress("UnusedImport", "unused", "DEPRECATION")
+
 package com.brenda.fitnesscheck
 
 import android.annotation.SuppressLint
-import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -54,6 +54,18 @@ import java.time.LocalDate
 import java.util.UUID
 import kotlin.math.roundToInt
 import kotlin.random.Random
+import android.content.Intent
+import android.os.Bundle
+import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.brenda.fitnesscheck.fitness.GoogleFitManager
+import com.brenda.fitnesscheck.fitness.FitnessDataSync
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import androidx.compose.material3.CircularProgressIndicator
+
 
 // Data classes for managing user data
 data class UserProfile(
@@ -91,8 +103,13 @@ data class DailyGoals(
     val stepsAchieved: Boolean = false,
     val waterAchieved: Boolean = false,
     val sleepAchieved: Boolean = false,
-    val moodLogged: Boolean = false
-)
+    val moodLogged: Boolean = false,
+    val actualSteps: Int = 0,  // ADD - for real step data from Google Fit
+    val stepGoal: Int = 10000  // ADD - for comparison
+) {
+    val stepProgress: Float
+        get() = if (stepGoal > 0) (actualSteps.toFloat() / stepGoal.toFloat()).coerceAtMost(1f) else 0f
+}
 
 data class Challenge(
     val id: String,
@@ -142,26 +159,93 @@ fun ChallengeEntity.toChallenge(): Challenge {
     )
 }
 
-class MainActivity : ComponentActivity() {
-    // Initialize database and repositories
+@Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+class MainActivity : ComponentActivity() {  // Keep ComponentActivity, not AppCompatActivity
+    // Your existing database and repositories
     private val database by lazy { FitnessDatabase.getDatabase(this) }
     private val challengeRepository by lazy { ChallengeRepository(database.challengeDao()) }
     private val userProfileRepository by lazy { UserProfileRepository(database.userProfileDao()) }
 
-    // Create ViewModelFactories
+    // Your existing ViewModelFactories
     private val challengeViewModelFactory by lazy { ChallengeViewModelFactory(challengeRepository) }
     private val userProfileViewModelFactory by lazy { UserProfileViewModelFactory(userProfileRepository) }
+
+    // ADD THESE NEW PROPERTIES FOR GOOGLE FIT
+    private lateinit var googleFitManager: GoogleFitManager
+    private lateinit var fitnessDataSync: FitnessDataSync
+
+    companion object {
+        private const val GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1001
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Initialize Google Fit
+        googleFitManager = GoogleFitManager(this)
+        fitnessDataSync = FitnessDataSync(this, googleFitManager)
+
+        // Check and request permissions
+        checkGoogleFitPermissions()
+
         setContent {
             FitnessCheckTheme {
                 AppNavigationWithDatabase(
                     challengeViewModelFactory = challengeViewModelFactory,
-                    userProfileViewModelFactory = userProfileViewModelFactory
+                    userProfileViewModelFactory = userProfileViewModelFactory,
+                    googleFitManager = googleFitManager,
+                    fitnessDataSync = fitnessDataSync
                 )
+            }
+        }
+    }
+
+    // CORRECTED permission check method
+    private fun checkGoogleFitPermissions() {
+        if (!googleFitManager.hasPermissions()) {
+            // Request permissions - Google Fit uses a different permission flow
+            val account = googleFitManager.getGoogleAccount()
+            val fitnessOptions = googleFitManager.getFitnessOptions()
+
+            // Use Google Fit's permission request method
+            GoogleSignIn.requestPermissions(
+                this,
+                GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
+                account,
+                fitnessOptions
+            )
+        } else {
+            // Permissions already granted, sync data
+            syncFitnessData()
+        }
+    }
+
+
+    // Handle the permission result
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            GOOGLE_FIT_PERMISSIONS_REQUEST_CODE -> {
+                if (resultCode == RESULT_OK) {
+                    syncFitnessData()
+                } else {
+                    Toast.makeText(this, "Google Fit permissions required for step tracking", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    private fun syncFitnessData() {
+        lifecycleScope.launch {
+            try {
+                // Sync today's data
+                val todayData = fitnessDataSync.syncTodayData()
+                todayData?.let {
+                    Toast.makeText(this@MainActivity, "Synced ${it.steps} steps from Google Fit!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@MainActivity, "Error syncing fitness data: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -170,15 +254,18 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigationWithDatabase(
     challengeViewModelFactory: ChallengeViewModelFactory,
-    userProfileViewModelFactory: UserProfileViewModelFactory
+    userProfileViewModelFactory: UserProfileViewModelFactory,
+    googleFitManager: GoogleFitManager,
+    fitnessDataSync: FitnessDataSync
 ) {
-    // Create ViewModels using the factories
     val challengeViewModel: ChallengeViewModel = viewModel(factory = challengeViewModelFactory)
     val userProfileViewModel: UserProfileViewModel = viewModel(factory = userProfileViewModelFactory)
 
     AppNavigation(
         challengeViewModel = challengeViewModel,
-        userProfileViewModel = userProfileViewModel
+        userProfileViewModel = userProfileViewModel,
+        googleFitManager = googleFitManager,
+        fitnessDataSync = fitnessDataSync
     )
 }
 
@@ -197,12 +284,13 @@ fun FitnessCheckTheme(content: @Composable () -> Unit) {
 @Composable
 fun AppNavigation(
     challengeViewModel: ChallengeViewModel,
-    userProfileViewModel: UserProfileViewModel
+    userProfileViewModel: UserProfileViewModel,
+    googleFitManager: GoogleFitManager,
+    fitnessDataSync: FitnessDataSync
 ) {
     val navController = rememberNavController()
     val calendarData = remember { generateSampleCalendarData() }
 
-    // Observe user profile from database
     val userProfileEntity by userProfileViewModel.userProfile.collectAsState()
     val userProfile = userProfileEntity?.toUserProfile() ?: UserProfile()
 
@@ -212,9 +300,12 @@ fun AppNavigation(
                 navController = navController,
                 challengeViewModel = challengeViewModel,
                 userProfileViewModel = userProfileViewModel,
-                userProfile = userProfile
+                userProfile = userProfile,
+                googleFitManager = googleFitManager,
+                fitnessDataSync = fitnessDataSync
             )
         }
+        // Keep all your existing composable routes unchanged
         composable("settings") { SettingsScreen(navController) }
         composable("achievements") { AchievementsScreen(navController) }
         composable("detailed_tracking") { DetailedTrackingScreen(navController) }
@@ -235,7 +326,9 @@ fun MainApp(
     navController: NavController,
     challengeViewModel: ChallengeViewModel,
     userProfileViewModel: UserProfileViewModel,
-    userProfile: UserProfile
+    userProfile: UserProfile,
+    googleFitManager: GoogleFitManager,
+    fitnessDataSync: FitnessDataSync
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -255,13 +348,17 @@ fun MainApp(
                 challengeViewModel = challengeViewModel,
                 userProfile = userProfile,
                 onNavigateToTab = { tabIndex ->
-                    selectedTab = tabIndex // Navigate to the specified tab
-                }
+                    selectedTab = tabIndex
+                },
+                googleFitManager = googleFitManager,
+                fitnessDataSync = fitnessDataSync
             )
             1 -> FitnessScreen(
                 modifier = Modifier.padding(innerPadding),
                 userProfile = userProfile,
-                userProfileViewModel = userProfileViewModel
+                userProfileViewModel = userProfileViewModel,
+                googleFitManager = googleFitManager,
+                fitnessDataSync = fitnessDataSync
             )
             2 -> ChallengesScreen(
                 modifier = Modifier.padding(innerPadding),
@@ -368,18 +465,37 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     challengeViewModel: ChallengeViewModel,
     userProfile: UserProfile,
-    onNavigateToTab: (Int) -> Unit = {} // Add navigation callback
+    onNavigateToTab: (Int) -> Unit = {},
+    googleFitManager: GoogleFitManager,
+    fitnessDataSync: FitnessDataSync
 ) {
     val challengeEntities by challengeViewModel.allChallenges.collectAsState(initial = emptyList())
     val context = LocalContext.current
 
-    // TODO: Replace these with actual tracking data from your fitness tracking system
-    // For now, I'll create sample progress that updates with profile changes
-    var currentSteps by remember { mutableIntStateOf(7500) }
+    // State for fitness data
+    var currentSteps by remember { mutableIntStateOf(0) }
     var currentWaterIntake by remember { mutableFloatStateOf(1.8f) }
     var currentSleepHours by remember { mutableFloatStateOf(7.2f) }
+    var isLoadingSteps by remember { mutableStateOf(false) }
 
-    // Calculate progress percentages based on current profile goals
+    // Load real step data when screen appears
+    LaunchedEffect(Unit) {
+        if (googleFitManager.hasPermissions()) {
+            isLoadingSteps = true
+            try {
+                val todayData = fitnessDataSync.syncTodayData()
+                todayData?.let {
+                    currentSteps = it.steps
+                }
+            } catch (_: Exception) {
+                // Keep default value on error
+            } finally {
+                isLoadingSteps = false
+            }
+        }
+    }
+
+    // Calculate progress percentages
     val stepProgress = (currentSteps.toFloat() / userProfile.stepGoal.toFloat()).coerceAtMost(1.0f)
     val waterProgress = (currentWaterIntake / userProfile.waterGoal).coerceAtMost(1.0f)
     val sleepProgress = (currentSleepHours / userProfile.sleepGoal).coerceAtMost(1.0f)
@@ -391,7 +507,7 @@ fun HomeScreen(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Welcome Header
+        // Welcome Header with Google Fit status
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF1976D2)),
@@ -405,14 +521,20 @@ fun HomeScreen(
                     color = Color.White
                 )
                 Text(
-                    text = "Ready to crush your goals today?",
+                    text = if (googleFitManager.hasPermissions()) {
+                        if (isLoadingSteps) "Syncing with Google Fit..."
+                        else "Connected to Google Fit 📱"
+                    } else {
+                        "Ready to crush your goals today?"
+                    },
                     fontSize = 16.sp,
                     color = Color.White.copy(alpha = 0.9f)
                 )
             }
         }
 
-        // Quick Stats Row - NOW CLICKABLE!
+
+        // Quick Stats Row (keep your existing code)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -424,7 +546,7 @@ fun HomeScreen(
                 color = Color(0xFF4CAF50),
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    onNavigateToTab(2) // Navigate to Challenges tab (index 2)
+                    onNavigateToTab(2)
                     Toast.makeText(context, "Opening Challenges", Toast.LENGTH_SHORT).show()
                 }
             )
@@ -435,7 +557,7 @@ fun HomeScreen(
                 color = Color(0xFF2196F3),
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    onNavigateToTab(1) // Navigate to Fitness tab (index 1)
+                    onNavigateToTab(1)
                     Toast.makeText(context, "Opening Fitness Tracker", Toast.LENGTH_SHORT).show()
                 }
             )
@@ -446,13 +568,13 @@ fun HomeScreen(
                 color = Color(0xFF00BCD4),
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    onNavigateToTab(1) // Navigate to Fitness tab (index 1)
+                    onNavigateToTab(1)
                     Toast.makeText(context, "Opening Water Tracker", Toast.LENGTH_SHORT).show()
                 }
             )
         }
 
-        // Today's Progress - NOW DYNAMIC!
+        // Today's Progress with REAL Google Fit data
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFF3E5F5))
@@ -477,15 +599,15 @@ fun HomeScreen(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Steps Progress - Dynamic and Clickable
+                // Steps Progress - NOW WITH REAL DATA
                 ClickableDynamicProgressItem(
-                    title = "Steps",
-                    current = currentSteps.toString(),
+                    title = if (googleFitManager.hasPermissions()) "Steps (Google Fit)" else "Steps (Manual)",
+                    current = if (isLoadingSteps) "..." else currentSteps.toString(),
                     goal = userProfile.stepGoal.toString(),
                     progress = stepProgress,
                     onQuickAdd = { currentSteps += 500 },
                     onClick = {
-                        onNavigateToTab(1) // Navigate to Fitness tab
+                        onNavigateToTab(1)
                         Toast.makeText(context, "Opening Step Tracker", Toast.LENGTH_SHORT).show()
                     },
                     icon = "🚶"
@@ -493,7 +615,7 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Water Progress - Dynamic and Clickable
+                // Keep existing water and sleep progress
                 ClickableDynamicProgressItem(
                     title = "Water",
                     current = String.format("%.1f", currentWaterIntake) + "L",
@@ -501,7 +623,7 @@ fun HomeScreen(
                     progress = waterProgress,
                     onQuickAdd = { currentWaterIntake += 0.2f },
                     onClick = {
-                        onNavigateToTab(1) // Navigate to Fitness tab
+                        onNavigateToTab(1)
                         Toast.makeText(context, "Opening Water Tracker", Toast.LENGTH_SHORT).show()
                     },
                     icon = "💧"
@@ -509,7 +631,6 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Sleep Progress - Dynamic and Clickable
                 ClickableDynamicProgressItem(
                     title = "Sleep",
                     current = String.format("%.1f", currentSleepHours) + "h",
@@ -517,11 +638,66 @@ fun HomeScreen(
                     progress = sleepProgress,
                     onQuickAdd = { currentSleepHours += 0.5f },
                     onClick = {
-                        onNavigateToTab(1) // Navigate to Fitness tab
+                        onNavigateToTab(1)
                         Toast.makeText(context, "Opening Sleep Tracker", Toast.LENGTH_SHORT).show()
                     },
                     icon = "😴"
                 )
+            }
+        }
+
+        // Google Fit sync button (only show if connected)
+        if (googleFitManager.hasPermissions()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E8))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("Google Fit Sync", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                        Text("Tap to refresh step data", fontSize = 12.sp, color = Color.Gray)
+                    }
+
+                    Button(
+                        onClick = {
+                            // CORRECTED coroutine scope
+                            isLoadingSteps = true
+                            CoroutineScope(Dispatchers.Main).launch {
+                                try {
+                                    val todayData = fitnessDataSync.syncTodayData()
+                                    todayData?.let {
+                                        currentSteps = it.steps
+                                        Toast.makeText(context, "Synced ${it.steps} steps!", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Sync failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                                } finally {
+                                    isLoadingSteps = false
+                                }
+                            }
+                        },
+                        enabled = !isLoadingSteps,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                    ) {
+                        if (isLoadingSteps) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Default.Refresh, contentDescription = "Sync")
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(if (isLoadingSteps) "Syncing..." else "Sync")
+                    }
+                }
             }
         }
 
@@ -563,7 +739,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        onNavigateToTab(2) // Navigate to Challenges tab
+                        onNavigateToTab(2)
                         Toast.makeText(context, "Opening All Challenges", Toast.LENGTH_SHORT).show()
                     },
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E8))
@@ -649,7 +825,6 @@ fun HomeScreen(
                 ) {
                     Button(
                         onClick = {
-                            // Quick log workout - add some steps and water
                             currentSteps += 1000
                             currentWaterIntake += 0.3f
                             Toast.makeText(context, "Workout logged! +1000 steps, +300ml water", Toast.LENGTH_SHORT).show()
@@ -677,7 +852,6 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Reset Progress Button (for testing)
                 OutlinedButton(
                     onClick = {
                         currentSteps = 0
@@ -695,6 +869,7 @@ fun HomeScreen(
         }
     }
 }
+
 
 // New Clickable QuickStatCard
 @Composable
@@ -838,12 +1013,32 @@ fun ClickableDynamicProgressItem(
 fun FitnessScreen(
     modifier: Modifier = Modifier,
     userProfile: UserProfile,
-    userProfileViewModel: UserProfileViewModel
+    userProfileViewModel: UserProfileViewModel,
+    googleFitManager: GoogleFitManager,
+    fitnessDataSync: FitnessDataSync
 ) {
-    var steps by remember { mutableIntStateOf(7500) }
+    var steps by remember { mutableIntStateOf(0) }
     var waterIntake by remember { mutableFloatStateOf(1.8f) }
     var sleepHours by remember { mutableFloatStateOf(7.2f) }
     var mood by remember { mutableFloatStateOf(7f) }
+    var isLoadingFitData by remember { mutableStateOf(false) }
+
+    // Load real fitness data
+    LaunchedEffect(Unit) {
+        if (googleFitManager.hasPermissions()) {
+            isLoadingFitData = true
+            try {
+                val todayData = fitnessDataSync.syncTodayData()
+                todayData?.let {
+                    steps = it.steps
+                }
+            } catch (_: Exception) {
+                // Keep default values on error
+            } finally {
+                isLoadingFitData = false
+            }
+        }
+    }
 
     Column(
         modifier = modifier
@@ -859,13 +1054,26 @@ fun FitnessScreen(
             color = Color(0xFF1976D2)
         )
 
-        // Goal Adjustment Card with Database Integration
+        // Keep your existing Goal Adjustment Card
         GoalAdjustmentCard(userProfile, userProfileViewModel)
 
-        // Existing interactive cards...
+        // Goal Adjustment Card with Database Integration
         InteractiveCard(
-            title = "Steps Today",
-            value = steps.toString(),
+            title = if (googleFitManager.hasPermissions()) "Steps Today (Google Fit)" else "Steps Today",
+            value = if (isLoadingFitData) "Loading..." else steps.toString(),
+            unit = "steps",
+            goal = userProfile.stepGoal.toString(),
+            isGoalAchieved = steps >= userProfile.stepGoal,
+            onIncrement = { steps += 100 },
+            onDecrement = { if (steps > 0) steps -= 100 },
+            icon = Icons.AutoMirrored.Filled.DirectionsWalk
+        )
+        GoalAdjustmentCard(userProfile, userProfileViewModel)
+
+
+        InteractiveCard(
+            title = if (googleFitManager.hasPermissions()) "Steps Today (Google Fit)" else "Steps Today",
+            value = if (isLoadingFitData) "Loading..." else steps.toString(),
             unit = "steps",
             goal = userProfile.stepGoal.toString(),
             isGoalAchieved = steps >= userProfile.stepGoal,
@@ -874,6 +1082,7 @@ fun FitnessScreen(
             icon = Icons.AutoMirrored.Filled.DirectionsWalk
         )
 
+        // Keep all your existing interactive cards for water, sleep, mood
         InteractiveCard(
             title = "Water Intake",
             value = String.format("%.1f", waterIntake),
@@ -896,7 +1105,7 @@ fun FitnessScreen(
             icon = Icons.Default.Bedtime
         )
 
-        // Enhanced Mood Tracker
+        // Keep your existing mood tracker card
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1))

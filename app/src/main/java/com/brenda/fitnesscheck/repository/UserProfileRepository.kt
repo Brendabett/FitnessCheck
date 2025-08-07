@@ -5,6 +5,7 @@ import com.brenda.fitnesscheck.database.UserProfileEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
+@Suppress("unused")
 class UserProfileRepository(private val userProfileDao: UserProfileDao) {
 
     /**

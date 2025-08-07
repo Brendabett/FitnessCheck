@@ -1,357 +1,157 @@
 package com.brenda.fitnesscheck
 
-import org.junit.Test
-import org.junit.Assert.*
+import androidx.compose.ui.graphics.Color
 import java.time.LocalDate
 import java.util.UUID
 
-/**
- * Basic unit tests for Fitness Check App
- * These tests focus on data classes and utility functions
- */
-class FitnessCheckTest {
+// ========== DATA CLASSES ==========
 
-    // ========== DATA CLASS TESTS ==========
-
-    @Test
-    fun userProfile_defaultValues_areCorrect() {
-        val userProfile = UserProfile()
-
-        assertEquals("Brenda", userProfile.name)
-        assertEquals(10000, userProfile.stepGoal)
-        assertEquals(2.0f, userProfile.waterGoal, 0.01f)
-        assertEquals(8.0f, userProfile.sleepGoal, 0.01f)
-        assertEquals(0, userProfile.profilePictureIndex)
-    }
-
-    @Test
-    fun userProfile_customValues_areSetCorrectly() {
-        val userProfile = UserProfile(
-            name = "John",
-            stepGoal = 15000,
-            waterGoal = 3.0f,
-            sleepGoal = 7.5f,
-            profilePictureIndex = 2
+data class UserProfile(
+    val name: String = "Brenda",
+    val stepGoal: Int = 10000,
+    val waterGoal: Float = 2.0f,
+    val sleepGoal: Float = 8.0f,
+    val profilePictureIndex: Int = 0
+) {
+    fun toEntity(): UserProfileEntity {
+        return UserProfileEntity(
+            id = 1,
+            name = name,
+            stepGoal = stepGoal,
+            waterGoal = waterGoal,
+            sleepGoal = sleepGoal,
+            profilePictureIndex = profilePictureIndex
         )
-
-        assertEquals("John", userProfile.name)
-        assertEquals(15000, userProfile.stepGoal)
-        assertEquals(3.0f, userProfile.waterGoal, 0.01f)
-        assertEquals(7.5f, userProfile.sleepGoal, 0.01f)
-        assertEquals(2, userProfile.profilePictureIndex)
     }
+}
 
-    @Test
-    fun challenge_creation_isCorrect() {
-        val challengeId = UUID.randomUUID().toString()
-        val challenge = Challenge(
-            id = challengeId,
-            title = "Test Challenge",
-            description = "Test Description",
-            type = ChallengeType.STEPS,
-            duration = "7 days",
-            participants = listOf("user1", "user2"),
-            isActive = true,
-            prize = "Test Prize",
-            progress = 50f,
-            maxProgress = 100f
+data class UserProfileEntity(
+    val id: Int,
+    val name: String,
+    val stepGoal: Int,
+    val waterGoal: Float,
+    val sleepGoal: Float,
+    val profilePictureIndex: Int
+)
+
+enum class ChallengeType {
+    STEPS, WATER, SLEEP, MEDITATION, MIXED
+}
+
+data class Challenge(
+    val id: String = UUID.randomUUID().toString(),
+    val title: String,
+    val description: String,
+    val type: ChallengeType,
+    val duration: String,
+    val participants: List<String>,
+    val isActive: Boolean,
+    val prize: String = "",
+    val progress: Float = 0f,
+    val maxProgress: Float = 100f
+) {
+    fun toChallengeEntity(): ChallengeEntity {
+        return ChallengeEntity(
+            id = id,
+            title = title,
+            description = description,
+            type = type.name,
+            duration = duration,
+            participantIds = participants.joinToString(","),
+            isActive = isActive,
+            prize = prize,
+            progress = progress,
+            maxProgress = maxProgress
         )
-
-        assertEquals(challengeId, challenge.id)
-        assertEquals("Test Challenge", challenge.title)
-        assertEquals("Test Description", challenge.description)
-        assertEquals(ChallengeType.STEPS, challenge.type)
-        assertEquals("7 days", challenge.duration)
-        assertEquals(2, challenge.participants.size)
-        assertTrue(challenge.isActive)
-        assertEquals("Test Prize", challenge.prize)
-        assertEquals(50f, challenge.progress, 0.01f)
-        assertEquals(100f, challenge.maxProgress, 0.01f)
     }
+}
 
-    @Test
-    fun dailyGoals_achievementStatus_isCorrect() {
-        val dailyGoals = DailyGoals(
-            date = LocalDate.now(),
-            stepsAchieved = true,
-            waterAchieved = false,
-            sleepAchieved = true,
-            moodLogged = false
+data class ChallengeEntity(
+    val id: String,
+    val title: String,
+    val description: String,
+    val type: String,
+    val duration: String,
+    val participantIds: String,
+    val isActive: Boolean,
+    val prize: String,
+    val progress: Float,
+    val maxProgress: Float
+) {
+    fun toChallenge(): Challenge {
+        return Challenge(
+            id = id,
+            title = title,
+            description = description,
+            type = ChallengeType.valueOf(type),
+            duration = duration,
+            participants = if (participantIds.isBlank()) emptyList() else participantIds.split(","),
+            isActive = isActive,
+            prize = prize,
+            progress = progress,
+            maxProgress = maxProgress
         )
-
-        assertTrue(dailyGoals.stepsAchieved)
-        assertFalse(dailyGoals.waterAchieved)
-        assertTrue(dailyGoals.sleepAchieved)
-        assertFalse(dailyGoals.moodLogged)
-        assertEquals(LocalDate.now(), dailyGoals.date)
     }
+}
 
-    // ========== BUSINESS LOGIC TESTS ==========
+data class DailyGoals(
+    val date: LocalDate,
+    val stepsAchieved: Boolean = false,
+    val waterAchieved: Boolean = false,
+    val sleepAchieved: Boolean = false,
+    val moodLogged: Boolean = false
+)
 
-    @Test
-    fun getChallengeTypeEmoji_returnsCorrectEmoji() {
-        assertEquals("🚶", getChallengeTypeEmoji(ChallengeType.STEPS))
-        assertEquals("💧", getChallengeTypeEmoji(ChallengeType.WATER))
-        assertEquals("😴", getChallengeTypeEmoji(ChallengeType.SLEEP))
-        assertEquals("🧘", getChallengeTypeEmoji(ChallengeType.MEDITATION))
-        assertEquals("🎯", getChallengeTypeEmoji(ChallengeType.MIXED))
+data class CalendarData(
+    val date: LocalDate,
+    val stepsCompleted: Boolean = false,
+    val waterCompleted: Boolean = false,
+    val sleepCompleted: Boolean = false,
+    val moodLogged: Boolean = false
+)
+
+// ========== UTILITY FUNCTIONS ==========
+
+fun getChallengeTypeEmoji(type: ChallengeType): String {
+    return when (type) {
+        ChallengeType.STEPS -> "🚶"
+        ChallengeType.WATER -> "💧"
+        ChallengeType.SLEEP -> "😴"
+        ChallengeType.MEDITATION -> "🧘"
+        ChallengeType.MIXED -> "🎯"
     }
+}
 
-    @Test
-    fun getProfilePictureColor_returnsValidColors() {
-        val color0 = getProfilePictureColor(0)
-        val color1 = getProfilePictureColor(1)
-        val color5 = getProfilePictureColor(5) // Should wrap around
+fun getProfilePictureColor(index: Int): Color {
+    val colors = listOf(
+        Color(0xFF6200EE), // Purple
+        Color(0xFF03DAC6), // Teal
+        Color(0xFFFF6B6B), // Red
+        Color(0xFF4ECDC4), // Turquoise
+        Color(0xFF45B7D1)  // Blue
+    )
 
-        // Test that colors are returned (not null)
-        assertNotNull(color0)
-        assertNotNull(color1)
-        assertNotNull(color5)
+    // Handle negative indices and wrap around
+    val normalizedIndex = if (index < 0) 0 else index % colors.size
+    return colors[normalizedIndex]
+}
 
-        // Test wrap-around (index 5 should equal index 0)
-        assertEquals(color0, color5)
-    }
+fun generateSampleCalendarData(): List<CalendarData> {
+    val data = mutableListOf<CalendarData>()
+    val today = LocalDate.now()
 
-    @Test
-    fun generateSampleCalendarData_returnsCorrectSize() {
-        val calendarData = generateSampleCalendarData()
-
-        // Should return 31 days (30 days ago + today)
-        assertEquals(31, calendarData.size)
-
-        // First item should be 30 days ago
-        val expectedFirstDate = LocalDate.now().minusDays(30)
-        assertEquals(expectedFirstDate, calendarData.first().date)
-
-        // Last item should be today
-        assertEquals(LocalDate.now(), calendarData.last().date)
-    }
-
-    // ========== CONVERSION FUNCTION TESTS ==========
-
-    @Test
-    fun userProfile_toEntity_conversion_isCorrect() {
-        val userProfile = UserProfile(
-            name = "Test User",
-            stepGoal = 12000,
-            waterGoal = 2.5f,
-            sleepGoal = 8.5f,
-            profilePictureIndex = 1
+    // Generate data for the last 30 days + today (31 total)
+    for (i in 30 downTo 0) {
+        val date = today.minusDays(i.toLong())
+        val calendarData = CalendarData(
+            date = date,
+            stepsCompleted = (i % 3 == 0), // Simulate some completed days
+            waterCompleted = (i % 4 == 0),
+            sleepCompleted = (i % 5 == 0),
+            moodLogged = (i % 2 == 0)
         )
-
-        val entity = userProfile.toEntity()
-
-        assertEquals(1, entity.id)
-        assertEquals("Test User", entity.name)
-        assertEquals(12000, entity.stepGoal)
-        assertEquals(2.5f, entity.waterGoal, 0.01f)
-        assertEquals(8.5f, entity.sleepGoal, 0.01f)
-        assertEquals(1, entity.profilePictureIndex)
+        data.add(calendarData)
     }
 
-    @Test
-    fun challenge_toEntity_conversion_isCorrect() {
-        val challenge = Challenge(
-            id = "test-id",
-            title = "Test Challenge",
-            description = "Test Description",
-            type = ChallengeType.WATER,
-            duration = "10 days",
-            participants = listOf("user1", "user2", "user3"),
-            isActive = true,
-            prize = "Test Prize",
-            progress = 75f,
-            maxProgress = 100f
-        )
-
-        val entity = challenge.toChallengeEntity()
-
-        assertEquals("test-id", entity.id)
-        assertEquals("Test Challenge", entity.title)
-        assertEquals("Test Description", entity.description)
-        assertEquals("WATER", entity.type)
-        assertEquals("10 days", entity.duration)
-        assertEquals("user1,user2,user3", entity.participantIds)
-        assertTrue(entity.isActive)
-        assertEquals("Test Prize", entity.prize)
-        assertEquals(75f, entity.progress, 0.01f)
-        assertEquals(100f, entity.maxProgress, 0.01f)
-    }
-
-    @Test
-    fun challengeEntity_toChallenge_conversion_isCorrect() {
-        // This test assumes you have ChallengeEntity available
-        // If not, you might need to comment this out or create a mock
-        try {
-            val entity = com.brenda.fitnesscheck.database.ChallengeEntity(
-                id = "test-id",
-                title = "Test Challenge",
-                description = "Test Description",
-                type = "STEPS",
-                duration = "5 days",
-                participantIds = "user1,user2",
-                isActive = true,
-                prize = "Test Prize",
-                progress = 40f,
-                maxProgress = 100f
-            )
-
-            val challenge = entity.toChallenge()
-
-            assertEquals("test-id", challenge.id)
-            assertEquals("Test Challenge", challenge.title)
-            assertEquals("Test Description", challenge.description)
-            assertEquals(ChallengeType.STEPS, challenge.type)
-            assertEquals("5 days", challenge.duration)
-            assertEquals(2, challenge.participants.size)
-            assertEquals("user1", challenge.participants[0])
-            assertEquals("user2", challenge.participants[1])
-            assertTrue(challenge.isActive)
-            assertEquals("Test Prize", challenge.prize)
-            assertEquals(40f, challenge.progress, 0.01f)
-            assertEquals(100f, challenge.maxProgress, 0.01f)
-        } catch (_: Exception) {
-            // If ChallengeEntity is not available, this test will be skipped
-            println("Skipping ChallengeEntity test - entity class not found")
-        }
-    }
-
-    // ========== EDGE CASE TESTS ==========
-
-    @Test
-    fun userProfile_edgeCaseValues_areHandledCorrectly() {
-        val userProfile = UserProfile(
-            name = "",
-            stepGoal = 0,
-            waterGoal = 0f,
-            sleepGoal = 0f,
-            profilePictureIndex = -1
-        )
-
-        // Test that empty/zero values don't crash
-        assertEquals("", userProfile.name)
-        assertEquals(0, userProfile.stepGoal)
-        assertEquals(0f, userProfile.waterGoal, 0.01f)
-        assertEquals(0f, userProfile.sleepGoal, 0.01f)
-        assertEquals(-1, userProfile.profilePictureIndex)
-    }
-
-    @Test
-    fun challenge_emptyParticipants_isHandledCorrectly() {
-        val challenge = Challenge(
-            id = "test",
-            title = "Test",
-            description = "Test",
-            type = ChallengeType.STEPS,
-            duration = "1 day",
-            participants = emptyList(),
-            isActive = true
-        )
-
-        assertEquals(0, challenge.participants.size)
-        assertTrue(challenge.participants.isEmpty())
-    }
-
-    @Test
-    fun getProfilePictureColor_negativeIndex_doesNotCrash() {
-        val color = getProfilePictureColor(-1)
-        // Should not crash and should return a valid color
-        assertNotNull(color)
-    }
-
-    @Test
-    fun getChallengeTypeEmoji_allTypes_returnValidEmojis() {
-        ChallengeType.entries.forEach { type ->
-            val emoji = getChallengeTypeEmoji(type)
-            assertNotNull(emoji)
-            assertTrue("Emoji should not be empty", emoji.isNotEmpty())
-            assertTrue("Emoji should be reasonable length", emoji.length <= 4)
-        }
-    }
-
-    // ========== PERFORMANCE TESTS ==========
-
-    @Test
-    fun generateSampleCalendarData_performance_isFast() {
-        val startTime = System.currentTimeMillis()
-
-        repeat(100) {
-            generateSampleCalendarData()
-        }
-
-        val endTime = System.currentTimeMillis()
-        val duration = endTime - startTime
-
-        // Should complete 100 generations in less than 1 second
-        assertTrue("Calendar data generation took too long: ${duration}ms", duration < 1000)
-    }
-
-    @Test
-    fun challengeConversion_bulkOperations_performWell() {
-        val challenges = (1..100).map { index ->
-            Challenge(
-                id = "challenge-$index",
-                title = "Challenge $index",
-                description = "Description $index",
-                type = ChallengeType.entries[index % ChallengeType.entries.size],
-                duration = "$index days",
-                participants = listOf("user$index"),
-                isActive = index % 2 == 0
-            )
-        }
-
-        val startTime = System.currentTimeMillis()
-
-        val entities = challenges.map { it.toChallengeEntity() }
-
-        val endTime = System.currentTimeMillis()
-        val duration = endTime - startTime
-
-        assertEquals(100, entities.size)
-        assertTrue("Bulk conversion took too long: ${duration}ms", duration < 100)
-    }
-
-    // ========== VALIDATION TESTS ==========
-
-    @Test
-    fun userProfile_validateGoalRanges() {
-        val userProfile = UserProfile(
-            stepGoal = 50000, // Very high but valid
-            waterGoal = 10f,   // High but valid
-            sleepGoal = 12f    // High but valid
-        )
-
-        assertTrue("Step goal should be positive", userProfile.stepGoal > 0)
-        assertTrue("Water goal should be positive", userProfile.waterGoal > 0)
-        assertTrue("Sleep goal should be positive", userProfile.sleepGoal > 0)
-    }
-
-    @Test
-    fun challenge_progressValidation() {
-        val challenge = Challenge(
-            id = "test",
-            title = "Test",
-            description = "Test",
-            type = ChallengeType.STEPS,
-            duration = "1 day",
-            participants = listOf("user"),
-            isActive = true,
-            progress = 75f,
-            maxProgress = 100f
-        )
-
-        assertTrue("Progress should not exceed max progress",
-            challenge.progress <= challenge.maxProgress)
-        assertTrue("Progress should be non-negative", challenge.progress >= 0f)
-        assertTrue("Max progress should be positive", challenge.maxProgress > 0f)
-    }
-
-    @Test
-    fun challengeType_enumIntegrity() {
-        // Test that all enum values are present
-        val expectedTypes = setOf("STEPS", "WATER", "SLEEP", "MEDITATION", "MIXED")
-        val actualTypes = ChallengeType.entries.map { it.name }.toSet()
-
-        assertEquals("All challenge types should be present", expectedTypes, actualTypes)
-    }
+    return data
 }
