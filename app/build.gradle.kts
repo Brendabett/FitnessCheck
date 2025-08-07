@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.brenda.fitnesscheck"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.brenda.fitnesscheck"
@@ -23,6 +23,7 @@ android {
             useSupportLibrary = true
         }
     }
+
 
     buildTypes {
         debug {
