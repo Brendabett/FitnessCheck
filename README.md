@@ -68,7 +68,7 @@ git clone https://github.com/your-username/fitnesscheck.git
 2. Open in Android Studio:
 
    ```
-   File → Open → Select 'FitnessCheck copy' folder
+   File → Open → Select 'FitnessCheck' folder
    ```
 
 3. Sync Gradle and run the app on an emulator or physical device.
