@@ -7,7 +7,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.Assert.*
 import org.junit.Before
-import com.brenda.fitnesscheck.fitness.GoogleFitManager
+import com.brenda.fitnesscheck.callingfitness.GoogleFitManager
 import java.time.LocalDate
 
 /**

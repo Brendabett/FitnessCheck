@@ -11,7 +11,7 @@ import java.time.LocalDate
 import java.util.UUID
 import android.content.Context
 import com.brenda.fitnesscheck.database.ChallengeEntity
-import com.brenda.fitnesscheck.fitness.GoogleFitManager
+import com.brenda.fitnesscheck.callingfitness.GoogleFitManager
 
 /**
  * Enhanced unit tests for Fitness Check App

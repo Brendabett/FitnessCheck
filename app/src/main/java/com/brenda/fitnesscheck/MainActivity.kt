@@ -59,8 +59,8 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.brenda.fitnesscheck.fitness.GoogleFitManager
-import com.brenda.fitnesscheck.fitness.FitnessDataSync
+import com.brenda.fitnesscheck.callingfitness.GoogleFitManager
+import com.brenda.fitnesscheck.callingfitness.FitnessDataSync
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

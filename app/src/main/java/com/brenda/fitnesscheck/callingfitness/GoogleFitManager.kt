@@ -1,4 +1,4 @@
-package com.brenda.fitnesscheck.fitness
+package com.brenda.fitnesscheck.callingfitness
 
 import android.content.Context
 import android.util.Log
@@ -11,7 +11,6 @@ import com.google.android.gms.fitness.data.DataSet
 import com.google.android.gms.fitness.data.DataType
 import com.google.android.gms.fitness.data.Field
 import com.google.android.gms.fitness.request.DataReadRequest
-import com.google.android.gms.fitness.result.DataReadResponse
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit

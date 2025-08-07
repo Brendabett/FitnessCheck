@@ -1,10 +1,7 @@
-package com.brenda.fitnesscheck.fitness
+package com.brenda.fitnesscheck.callingfitness
 
 import android.content.Context
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
