@@ -90,7 +90,6 @@ Text(
 )
 ```
 
-If you're documenting UI styles in the README, you can format them in a similar Kotlin code block. No need to replicate actual CSS.
 
 ---
 
