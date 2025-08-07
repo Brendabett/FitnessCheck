@@ -10,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.util.UUID
 import android.content.Context
+import com.brenda.fitnesscheck.database.ChallengeEntity
 import com.brenda.fitnesscheck.fitness.GoogleFitManager
 
 /**
