@@ -68,7 +68,7 @@ git clone https://github.com/your-username/fitnesscheck.git
 2. Open in Android Studio:
 
    ```
-   File → Open → Select 'FitnessCheck copy' folder
+   File → Open → Select 'FitnessCheck' folder
    ```
 
 3. Sync Gradle and run the app on an emulator or physical device.
@@ -90,7 +90,6 @@ Text(
 )
 ```
 
-If you're documenting UI styles in the README, you can format them in a similar Kotlin code block. No need to replicate actual CSS.
 
 ---
 
